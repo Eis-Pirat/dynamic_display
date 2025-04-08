@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+pydantic
+moviepy
+opencv-python
+face-recognition
+mediapipe
+scikit-learn
+tensorflow-macos
+lightfm
+prophet
+pandas
+sqlalchemy
+asyncpg
+python-dotenv

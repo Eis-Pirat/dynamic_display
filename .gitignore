@@ -1,0 +1,22 @@
+# Ignore les environnements virtuels
+.venv/
+__pycache__/
+*.pyc
+
+# Ignore les fichiers temporaires
+.DS_Store
+
+# Ignore les fichiers logs
+*.log
+
+# Ignore les modèles / outputs éventuels
+*.h5
+*.pkl
+*.joblib
+
+# Ignore les données faciales et images temporaires
+face_debug_*.jpg
+
+# Ignore les fichiers d'IDE
+.vscode/
+.idea/
