@@ -1,10 +1,8 @@
 from fastapi import APIRouter
-from app.agents.agent_audience import detect_visitors
+from app.agents.agent_audience import get_live_visitors
 
 router = APIRouter(prefix="/audience")
 
-@router.get("/scan")
-def scan_audience():
-    result = detect_visitors(display=False)  # Ne pas afficher l’image
-    return result
-
+@router.get("/live")
+def live_audience():
+    return get_live_visitors()
