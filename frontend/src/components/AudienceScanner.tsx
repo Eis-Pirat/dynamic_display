@@ -1,9 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { scannerAudience } from '../services/api';
+import { scannerAudience, getRecommandation } from '../services/api';
 import { Visiteur } from '../types/Visiteur';
+
+interface RecoResponse {
+  recommandation: string[];
+  images: string[];
+  profil: {
+    genre: string;
+    âge_estimé: number;
+    émotion: string;
+  };
+}
 
 const AudienceScanner: React.FC = () => {
   const [visiteurs, setVisiteurs] = useState<Visiteur[]>([]);
+  const [reco, setReco] = useState<RecoResponse | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -21,15 +32,22 @@ const AudienceScanner: React.FC = () => {
     const fetchLiveData = async () => {
       try {
         const data = await scannerAudience();
-        console.log("📦 Visiteurs détectés :", data); // Pour debug
         setVisiteurs(data);
+
+        if (data.length > 0) {
+          const recoResponse = await getRecommandation();
+          setReco(recoResponse);
+          console.log("🎯 Recommandation CIH :", recoResponse);
+        } else {
+          setReco(null);
+        }
       } catch (err) {
-        console.warn("Erreur lors de l'analyse :", err);
+        console.warn("Erreur :", err);
       }
     };
 
     startCamera();
-    const intervalId = setInterval(fetchLiveData, 2000);
+    const intervalId = setInterval(fetchLiveData, 3000);
     return () => clearInterval(intervalId);
   }, []);
 
@@ -51,22 +69,14 @@ const AudienceScanner: React.FC = () => {
         borderRadius: '10px',
         boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
       }}>
-        <h2 style={{ marginBottom: '1rem' }}>🎥 Caméra en direct</h2>
+        <h2>🎥 Caméra en direct</h2>
         <video
           ref={videoRef}
-          style={{
-            width: '100%',
-            maxWidth: '100%',
-            height: 'auto',
-            borderRadius: '8px',
-            border: '2px solid #ccc'
-          }}
+          style={{ width: '100%', borderRadius: '8px', border: '2px solid #ccc' }}
           autoPlay
           muted
         />
-        <p style={{ marginTop: '1rem', color: '#555' }}>
-          📡 Analyse automatique toutes les 2 secondes
-        </p>
+        <p style={{ marginTop: '1rem', color: '#555' }}>📱 Analyse automatique toutes les 3 secondes</p>
       </div>
 
       {/* 📊 Résultats */}
@@ -77,28 +87,41 @@ const AudienceScanner: React.FC = () => {
         borderRadius: '10px',
         boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
       }}>
-        <h2 style={{ marginBottom: '1rem' }}>📊 Résultats</h2>
+        <h2>📊 Résultats</h2>
         {visiteurs.length === 0 ? (
-          <p style={{ color: '#555' }}>Aucun visiteur détecté pour l’instant.</p>
+          <p style={{ color: '#888' }}>Aucun visiteur détecté</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {visiteurs.map((v) => (
-              <div key={v.id} style={{
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                padding: '1rem',
-                backgroundColor: '#f3f4f6'
-              }}>
-                <p><strong>👤 ID {v.id}</strong></p>
-                <p>🧬 Genre : <strong>{v.genre}</strong></p>
-                <p>🎂 Âge estimé : <strong>{v.âge_estimé} ans</strong></p>
-                <p>😊 Émotion : <strong>{v.émotion || 'Inconnue'}</strong></p>
-                <p>🧍 Posture : <strong>{v.posture || 'Inconnue'}</strong></p>
-                <p>📏 Distance : <strong>{v.distance_cm?.toFixed(1) ?? 'N/A'} cm</strong></p>
-                <p>👁️ Attention : <strong>{v.temps_attention ?? 0}s</strong></p>
-                <p>🚫 Inattention : <strong>{v.temps_inattention ?? 0}s</strong></p>
-              </div>
-            ))}
+          <div>
+            <p><strong>👤 Profil détecté</strong></p>
+            <p>🧜 Genre : {reco?.profil.genre ?? '...'}</p>
+            <p>🎂 Âge estimé : {reco?.profil.âge_estimé ?? '...'} ans</p>
+            <p>😊 Émotion : {reco?.profil.émotion ?? '...'}</p>
+            <p>🧕 Posture : {visiteurs[0]?.posture ?? 'Inconnue'}</p>
+            <p>📏 Distance : {visiteurs[0]?.distance_cm?.toFixed(1) ?? 'N/A'} cm</p>
+            <p>👁️ Attention : {visiteurs[0]?.temps_attention ?? 0}s</p>
+            <p>❌ Inattention : {visiteurs[0]?.temps_inattention ?? 0}s</p>
+          </div>
+        )}
+
+        {/* 🏱 Recommandations */}
+        {reco && reco.recommandation.length > 0 && (
+          <div style={{ marginTop: '2rem' }}>
+            <h3>🏱 Recommandations CIH</h3>
+            <ul>
+              {reco.recommandation.map((r, index) => (
+                <li key={index} style={{ marginBottom: '0.5rem' }}>{r}</li>
+              ))}
+            </ul>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '1rem' }}>
+              {reco.images.map((img, index) => (
+                <img
+                  key={index}
+                  src={`http://127.0.0.1:8000${img}`}
+                  alt={`Offre ${index}`}
+                  style={{ width: '200px', borderRadius: '8px', border: '1px solid #ddd' }}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
