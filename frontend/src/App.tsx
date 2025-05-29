@@ -1,8 +1,5 @@
 import React from 'react';
-import AudienceScanner from './components/AudienceScanner';
-
-function App() {
-  return <AudienceScanner />;
+import LiveDetector from './components/LiveDetector';
+export default function App() {
+  return <LiveDetector />;
 }
-
-export default App;

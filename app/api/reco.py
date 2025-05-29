@@ -1,13 +1,21 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from app.agents.agent_reco import recommander_contenu
+from app.agents.agent_reco import recommend_ad
 
-router = APIRouter(prefix="/reco", tags=["Recommandation"])
+router = APIRouter(
+    prefix="/reco",
+    tags=["Ad Recommendation"],
+    responses={404: {"description": "Not found"}},
+)
 
-class Profil(BaseModel):
-    genre: str
-    age: int
+# ✅ Input schema
+class AudienceProfile(BaseModel):
+    genre: str        # "Homme" or "Femme"
+    âge_estimé: int   # Integer age
+    émotion: str      # "joy", "neutral", "sad", etc.
 
-@router.post("/recommander")
-def reco_api(profil: Profil):
-    return recommander_contenu(profil.genre, profil.age)
+# ✅ Endpoint: /reco/ad
+@router.post("/ad", summary="Recommender: Predict best ad", response_description="Predicted ad class")
+async def get_ad_recommendation(profile: AudienceProfile):
+    ad = recommend_ad(profile.genre, profile.âge_estimé, profile.émotion)
+    return {"recommandation": ad}

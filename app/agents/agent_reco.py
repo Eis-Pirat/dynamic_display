@@ -1,37 +1,19 @@
-def recommander_contenu(genre: str, age: int, emotion: str = "neutral") -> dict:
-    recommandations = []
-    images = []
+import joblib
+import numpy as np
+import os
 
-    # Offres par tranche d'âge
-    if age < 18:
-        recommandations.append("Offre Code 18")
-        images.append("/static/images/code18-big.jpg")
-    elif 18 <= age <= 30:
-        recommandations.extend(["Pack Intilak", "Carte Code 30"])
-        images.append("/static/images/code30-ad.jpg")
-        if genre == "Femme":
-            recommandations.append("Offre Club Sayidati")
-            images.append("/static/images/sayidati.jpg")
-        if emotion == "happy":
-            recommandations.append("Offre Go / Duo")
-            images.append("/static/images/offreduoo.png")
-    elif 30 < age <= 45:
-        recommandations.extend(["Pack Imtiyaz", "Carte Visa Gold"])
-        # (à compléter si une image est dispo)
-    else:
-        recommandations.extend(["Pack Raha", "Carte Visa Platinum / MasterCard Elite"])
-        images.append("/static/images/raha.jpeg")
+# === Load model and encoders ===
+model = joblib.load("app/models/ad_recommender.pkl")
+le_genre = joblib.load("app/models/le_genre.pkl")
+le_emotion = joblib.load("app/models/le_emotion.pkl")
+le_label = joblib.load("app/models/le_label.pkl")
 
-    # Offres basées sur l’émotion détectée
-    if emotion == "angry":
-        recommandations.append("Pack Raha (support complet)")
-        images.append("/static/images/raha.jpeg")
-    elif emotion == "happy":
-        recommandations.append("Offre GO ou DUO pour MRE")
-        images.append("/static/images/code212.jpg")
-
-    return {
-        "recommandation": recommandations,
-        "images": images,
-        "profil": {"genre": genre, "âge": age, "émotion": emotion}
-    }
+def recommend_ad(genre: str, age: int, emotion: str) -> str:
+    try:
+        genre_encoded = le_genre.transform([genre])[0]
+        emotion_encoded = le_emotion.transform([emotion])[0]
+        input_data = np.array([[genre_encoded, age, emotion_encoded]])
+        prediction = model.predict(input_data)[0]
+        return le_label.inverse_transform([prediction])[0]
+    except Exception as e:
+        return f"Erreur dans la prédiction : {e}"

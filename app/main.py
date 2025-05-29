@@ -1,7 +1,8 @@
 from fastapi import FastAPI
-from app.api import audience, reco, full  
+from app.api import audience, reco
+
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles  # 👈 à ajouter
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
     title="Affichage Dynamique Intelligent",
@@ -12,22 +13,23 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-# 👇 Ajoute cette ligne ici pour servir les images statiques
+# 🎯 Fichiers statiques pour les images recommandées
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
+# 🔓 CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
 
-# Inclusion des routes
-app.include_router(audience.router, prefix="/audience", tags=["Audience"])
-app.include_router(reco.router, prefix="/reco", tags=["Recommandation"])
-app.include_router(full.router, prefix="/full", tags=["Full Workflow"])
+# 📦 Inclusion des routes
+app.include_router(audience.router)
+app.include_router(reco.router)
+
 
 @app.get("/")
 def home():
-    return {"message": "Système Multi-Agents d’Affichage Dynamique actif"}
+    return {"message": "✅ Backend FastAPI opérationnel pour l’analyse d’audience"}
